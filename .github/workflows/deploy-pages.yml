@@ -1,0 +1,56 @@
+# Simpan sebagai .github/workflows/deploy-pages.yml
+# Settings > Pages > Source: GitHub Actions
+# Memakai isi ZIP Rizz-dsg-GitHub-PWA di root repository.
+name: Publikasikan Rizz.dsg PWA
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Ambil kode aplikasi
+        uses: actions/checkout@v6
+
+      - name: Siapkan GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Periksa dan kemas aplikasi
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in index.html manifest.json sw.js icons/icon-192.png icons/icon-512.png icons/apple-touch-icon.png icons/favicon.png; do
+            if [ ! -f "$file" ]; then
+              echo "::error::File $file belum ada. Ekstrak ZIP PWA dan unggah isinya ke root repository."
+              exit 1
+            fi
+          done
+          python3 -m json.tool manifest.json > /dev/null
+          mkdir -p _site
+          cp index.html manifest.json sw.js _site/
+          cp -R icons _site/icons
+          touch _site/.nojekyll
+
+      - name: Unggah aplikasi
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+      - name: Terbitkan aplikasi
+        id: deployment
+        uses: actions/deploy-pages@v4
