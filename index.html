@@ -1,0 +1,2119 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rizz.dsg — Kalkulator Desain</title>
+    <meta name="theme-color" content="#8b5cf6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Rizz.dsg">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/png" href="./icons/favicon.png">
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts: Plus Jakarta Sans, Inter, Orbitron -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@600;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- jsPDF Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script>
+        window.tailwind = window.tailwind || {};
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            bg: '#070a12',
+                            card: '#0e1526',
+                            border: '#1e293b',
+                            cyan: '#00f0ff',
+                            purple: '#8b5cf6',
+                            pink: '#ff007f',
+                            glow: 'rgba(0,240,255,0.2)'
+                        }
+                    },
+                    fontFamily: {
+                        orbitron: ['Orbitron', 'sans-serif'],
+                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #070a12;
+            color: #f1f5f9;
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(0, 240, 255, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.05) 0%, transparent 40%),
+                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+            min-height: 100vh;
+            letter-spacing: 0.01em;
+        }
+
+        .cyber-glass {
+            background: rgba(14, 21, 38, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 240, 255, 0.15);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .cyber-glass-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .cyber-glass-hover:hover {
+            border-color: rgba(0, 240, 255, 0.5);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .neon-glow-cyan {
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+        }
+        .neon-text-cyan {
+            text-shadow: 0 0 8px rgba(0, 240, 255, 0.6);
+        }
+
+        .scanline {
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.8), transparent);
+            position: absolute;
+            top: 0;
+            left: 0;
+            animation: scan 4s linear infinite;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        @keyframes scan {
+            0% { top: 0%; }
+            100% { top: 100%; }
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #070a12;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00f0ff;
+        }
+
+        .cyber-input {
+            background: rgba(7, 10, 18, 0.8);
+            border: 1px solid #1e293b;
+            color: #f8fafc;
+            transition: all 0.3s ease;
+        }
+        .cyber-input:focus {
+            outline: none;
+            border-color: #00f0ff;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .accordion-content.expanded {
+            max-height: 2000px;
+        }
+
+        @keyframes slideInUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .toast-animate {
+            animation: slideInUp 0.3s forwards ease-out;
+        }
+    </style>
+</head>
+<body class="p-3 md:p-6 relative overflow-x-hidden select-none">
+    <div class="scanline"></div>
+
+    <div class="max-w-7xl mx-auto space-y-6">
+
+        <header class="cyber-glass rounded-2xl p-4 md:p-6 flex flex-col md:flex-row justify-between items-center gap-4 relative overflow-hidden">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-cyan-500 to-purple-600 flex items-center justify-center neon-glow-cyan">
+                    <i class="fa-solid fa-calculator text-2xl text-black"></i>
+                </div>
+                <div>
+                    <h1 class="font-orbitron text-xl md:text-2xl font-bold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-500">
+                        RIZZ.DSG DESIGN PRICER
+                    </h1>
+                    <p class="text-xs text-slate-400 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                        Alat Hitung & Estimator Desain Futuristic
+                    </p>
+                </div>
+            </div>
+
+            <!-- Currency & Global Controls -->
+            <div class="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+                <div class="flex items-center gap-1.5 bg-slate-900 border border-cyan-500/40 rounded-xl px-2.5 py-1.5 shadow-md">
+                    <i class="fa-solid fa-coins text-cyan-400 text-xs"></i>
+                    <select id="currencySelector" onchange="changeCurrency(this.value)" class="bg-transparent text-xs font-bold text-cyan-300 focus:outline-none cursor-pointer">
+                        <option value="IDR" class="bg-slate-900 text-white">IDR (Rp)</option>
+                        <option value="USD" class="bg-slate-900 text-white">USD ($)</option>
+                        <option value="MYR" class="bg-slate-900 text-white">MYR (RM)</option>
+                    </select>
+                </div>
+
+                <div id="autoSaveBadge" class="text-xs text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 px-3 py-1.5 rounded-full flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up text-emerald-400"></i>
+                    <span id="saveStatusText">Otomatis Tersimpan</span>
+                </div>
+
+                <button onclick="openInstallModal()" id="pwaInstallBtn" class="cyber-glass-hover bg-slate-800/80 hover:bg-slate-700 text-cyan-400 text-xs px-3.5 py-2 rounded-xl border border-cyan-500/30 flex items-center gap-2 transition">
+                    <i class="fa-solid fa-mobile-screen-button"></i>
+                    <span>Install App</span>
+                </button>
+
+                <button onclick="openHistoryModal()" class="cyber-glass-hover bg-slate-800/80 hover:bg-slate-700 text-purple-400 text-xs px-3.5 py-2 rounded-xl border border-purple-500/30 flex items-center gap-2 transition">
+                    <i class="fa-solid fa-folder-open"></i>
+                    <span>Riwayat</span>
+                </button>
+
+                <button onclick="openSettingsModal()" class="cyber-glass-hover bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-slate-950 font-semibold text-xs px-4 py-2 rounded-xl transition shadow-lg flex items-center gap-2">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Pengaturan</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <div class="lg:col-span-7 space-y-6">
+
+                <!-- CLIENT INFO CARD -->
+                <section class="cyber-glass rounded-2xl p-5 md:p-6 space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <h2 class="font-orbitron text-sm md:text-base font-semibold text-cyan-400 flex items-center gap-2">
+                            <i class="fa-solid fa-user-gear"></i> Informasi Client & Brief
+                        </h2>
+                        <button onclick="resetClientForm()" class="text-xs text-slate-400 hover:text-cyan-300 transition">
+                            <i class="fa-solid fa-rotate-left"></i> Reset Client
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Nama Client / Perusahaan</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
+                                    <i class="fa-solid fa-user text-xs"></i>
+                                </span>
+                                <input type="text" id="clientName" placeholder="Contoh: PT. Cyber Tech / Bro Andi" 
+                                    class="cyber-input w-full pl-9 pr-3 py-2.5 rounded-xl text-sm"
+                                    oninput="handleInputSave()">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Nomor WhatsApp Client</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
+                                    <i class="fa-brands fa-whatsapp text-xs"></i>
+                                </span>
+                                <input type="tel" id="clientPhone" placeholder="Contoh: 08123456789" 
+                                    class="cyber-input w-full pl-9 pr-3 py-2.5 rounded-xl text-sm"
+                                    oninput="handleInputSave()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Catatan Brief / Deskripsi Project</label>
+                        <textarea id="clientBrief" rows="3" placeholder="Tuliskan catatan brief desain, nuansa warna, konsep, deadline, dll..." 
+                            class="cyber-input w-full p-3 rounded-xl text-sm resize-none"
+                            oninput="handleInputSave()"></textarea>
+                    </div>
+                </section>
+
+                <section class="cyber-glass rounded-2xl p-5 md:p-6 space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <h2 class="font-orbitron text-sm md:text-base font-semibold text-cyan-400 flex items-center gap-2">
+                            <i class="fa-solid fa-layer-group"></i> Pilih Layanan Desain (Kategori)
+                        </h2>
+                        <span class="text-xs text-slate-400">Centang & Atur Qty</span>
+                    </div>
+
+                    <!-- Category Accordions List -->
+                    <div id="categoriesContainer" class="space-y-3">
+                        <!-- Injected via JS -->
+                    </div>
+
+                    <!-- Custom Extra Service Add -->
+                    <div class="pt-2">
+                        <button onclick="addCustomServiceField()" class="w-full py-2.5 border border-dashed border-cyan-500/40 hover:border-cyan-400 bg-cyan-950/20 hover:bg-cyan-950/40 text-cyan-400 text-xs font-medium rounded-xl flex items-center justify-center gap-2 transition">
+                            <i class="fa-solid fa-plus"></i> Tambah Layanan Kustom / Lain-lain
+                        </button>
+                    </div>
+                </section>
+
+                <section class="cyber-glass rounded-2xl p-5 md:p-6 space-y-5">
+                    <div class="border-b border-slate-800 pb-3">
+                        <h2 class="font-orbitron text-sm md:text-base font-semibold text-purple-400 flex items-center gap-2">
+                            <i class="fa-solid fa-box-archive"></i> Paket Hemat (Social Media & Poster)
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Pilih paket siap pakai dengan harga bundling lebih hemat dari harga eceran.</p>
+                    </div>
+
+                    <!-- SOCIAL MEDIA PACKAGES -->
+                    <div class="space-y-3">
+                        <h3 class="text-xs font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-hashtag text-xs"></i> Social Media Packages
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="socialMediaPackagesGrid">
+                            <!-- Injected via JS -->
+                        </div>
+                    </div>
+
+                    <!-- POSTER PACKAGES -->
+                    <div class="space-y-3 pt-2">
+                        <h3 class="text-xs font-bold text-purple-400 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-image text-xs"></i> Poster Packages
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="posterPackagesGrid">
+                            <!-- Injected via JS -->
+                        </div>
+                    </div>
+                </section>
+
+                <section class="cyber-glass rounded-2xl p-5 md:p-6 space-y-4">
+                    <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
+                        <h2 class="font-orbitron text-sm font-semibold text-pink-400 flex items-center gap-2">
+                            <i class="fa-solid fa-puzzle-piece"></i> Add-ons & Express Delivery
+                        </h2>
+                        <span class="text-xs text-slate-400">Layanan Tambahan</span>
+                    </div>
+
+                    <!-- Add-ons List Grid -->
+                    <div id="addonsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Injected via JS -->
+                    </div>
+
+                    <!-- Express Order Switch -->
+                    <div class="bg-gradient-to-r from-amber-950/40 to-amber-900/20 border border-amber-500/40 p-4 rounded-xl flex items-center justify-between gap-4">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-bolt text-amber-400 text-sm"></i>
+                                <h4 class="text-xs font-bold text-amber-300 uppercase tracking-wider">Express Delivery (&lt; 24 Jam)</h4>
+                            </div>
+                            <p class="text-[11px] text-slate-300">
+                                Tambahkan biaya kilat sebesar <strong class="text-amber-400">+40% dari subtotal layanan & paket</strong> terpilih.
+                            </p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                            <input type="checkbox" id="expressToggle" class="sr-only peer" onchange="toggleExpress(this.checked)">
+                            <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                        </label>
+                    </div>
+
+                    <!-- Discount and Tax Fields -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Diskon Khusus (%)</label>
+                            <input type="number" id="discountPercent" min="0" max="100" step="any" value="0" 
+                                class="cyber-input w-full p-2.5 rounded-xl text-sm"
+                                oninput="handlePercentageInput(this)" onchange="handlePercentageInput(this, true)">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Pajak / Fee Agensi (%)</label>
+                            <input type="number" id="taxPercent" min="0" max="100" step="any" value="0" 
+                                class="cyber-input w-full p-2.5 rounded-xl text-sm"
+                                oninput="handlePercentageInput(this)" onchange="handlePercentageInput(this, true)">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="cyber-glass rounded-2xl p-5 md:p-6 space-y-3 border-l-4 border-l-cyan-400" id="termsSection">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <h2 class="font-orbitron text-xs font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-file-contract"></i> Ketentuan Layanan Desain
+                        </h2>
+                        <span class="text-[10px] text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">Dinamis Sesuai Pilihan</span>
+                    </div>
+
+                    <!-- NO PHYSICAL PRINT BANNER -->
+                    <div class="bg-rose-950/40 border border-rose-500/50 rounded-xl p-3 flex items-start gap-3 text-rose-200">
+                        <i class="fa-solid fa-ban text-rose-400 text-base mt-0.5"></i>
+                        <div class="text-xs">
+                            <strong class="block font-bold text-rose-300 uppercase tracking-wider">PENTING: TIDAK TERMASUK CETAK FISIK</strong>
+                            <span>Seluruh layanan hanya mencakup <strong>jasa desain & penyerahan File Digital Siap Cetak (Print-Ready / High-Res)</strong>. Biaya dan eksekusi cetak fisik menjadi tanggung jawab pemesan.</span>
+                        </div>
+                    </div>
+
+                    <!-- DYNAMIC TERMS LIST -->
+                    <ul id="dynamicTermsList" class="text-[11px] text-slate-300 space-y-2 list-disc list-inside leading-relaxed">
+                        <!-- Injected via JS -->
+                    </ul>
+                </section>
+
+            </div>
+
+            <div class="lg:col-span-5 space-y-6 lg:sticky lg:top-6 h-fit">
+
+                <!-- SUMMARY CARD -->
+                <div class="cyber-glass rounded-2xl p-6 border-2 border-cyan-500/40 neon-glow-cyan space-y-6 relative overflow-hidden">
+                    <div class="absolute -right-12 -top-12 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl"></div>
+
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                        <div>
+                            <span class="text-xs uppercase tracking-widest text-cyan-400 font-orbitron font-semibold">RINGKASAN ESTIMASI</span>
+                            <h3 class="text-xs text-slate-400">Rincian & Total Pesanan</h3>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-[10px] font-bold bg-cyan-950 text-cyan-300 border border-cyan-500/30">
+                            LIVE CALCULATOR
+                        </span>
+                    </div>
+
+                    <!-- Grand Total Display -->
+                    <div class="bg-slate-950/80 rounded-2xl p-5 text-center border border-slate-800 relative">
+                        <span class="text-xs text-slate-400 block mb-1">TOTAL ESTIMASI HARGA</span>
+                        <div id="grandTotalDisplay" class="font-orbitron text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-emerald-400 to-purple-400 tracking-tight">
+                            Rp 0
+                        </div>
+                        <div id="subtotalNote" class="text-[11px] text-slate-500 mt-2">
+                            Otomatis terhitung secara akurat
+                        </div>
+                    </div>
+
+                    <!-- Itemized Summary List -->
+                    <div class="space-y-2 max-h-64 overflow-y-auto pr-1">
+                        <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Layanan Terpilih:</h4>
+                        <div id="summaryBreakdown" class="space-y-2 text-xs divide-y divide-slate-800/60">
+                            <div class="text-slate-500 italic py-2 text-center">Belum ada layanan atau paket terpilih</div>
+                        </div>
+                    </div>
+
+                    <!-- Financial Calculations Subtotal Table -->
+                    <div class="space-y-2 pt-3 border-t border-slate-800 text-xs">
+                        <div class="flex justify-between text-slate-400">
+                            <span>Subtotal Layanan & Paket:</span>
+                            <span id="subtotalDisplay" class="font-medium text-slate-200">Rp 0</span>
+                        </div>
+                        <div id="expressRow" class="flex justify-between text-amber-400 hidden">
+                            <span>Express Delivery (+40%):</span>
+                            <span id="expressFeeDisplay">Rp 0</span>
+                        </div>
+                        <div id="discountRow" class="flex justify-between text-emerald-400 hidden">
+                            <span>Diskon:</span>
+                            <span id="discountDisplay">-Rp 0</span>
+                        </div>
+                        <div id="taxRow" class="flex justify-between text-slate-400 hidden">
+                            <span>Pajak / Fee:</span>
+                            <span id="taxDisplay">Rp 0</span>
+                        </div>
+                    </div>
+
+                    <!-- PAYMENT / ORDER STATUS SELECTOR -->
+                    <div class="space-y-3 pt-3 border-t border-slate-800">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+                                <i class="fa-solid fa-file-invoice-dollar"></i> Status Transaksi & Pembayaran
+                            </label>
+                        </div>
+                        <select id="paymentStatusSelect" onchange="updatePaymentStatus(this.value)" class="cyber-input w-full p-2.5 rounded-xl text-xs font-semibold cursor-pointer">
+                            <option value="BELUM_BAYAR" class="bg-slate-900 text-slate-300">🟡 Belum Bayar (Draft Estimasi)</option>
+                            <option value="DP" class="bg-slate-900 text-amber-300">🟠 DP / Uang Muka (50%)</option>
+                            <option value="LUNAS" class="bg-slate-900 text-emerald-300">🟢 Lunas / Selesai</option>
+                        </select>
+
+                        <!-- DP Custom Input Box -->
+                        <div id="dpInputContainer" class="hidden space-y-2 bg-slate-900/90 p-3 rounded-xl border border-amber-500/30">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="text-slate-300">Persentase DP (%):</span>
+                                <input type="number" id="dpPercentInput" min="1" max="99" value="50" oninput="handleDpInputChange()" class="cyber-input w-20 px-2 py-1 text-right text-xs rounded-lg font-mono">
+                            </div>
+                            <div class="flex justify-between text-xs text-amber-300 font-semibold pt-1 border-t border-slate-800">
+                                <span>Nominal DP (Dibayar):</span>
+                                <span id="dpAmountDisplay" class="font-mono">Rp 0</span>
+                            </div>
+                            <div class="flex justify-between text-xs text-rose-300 font-semibold">
+                                <span>Sisa Pelunasan:</span>
+                                <span id="remainingAmountDisplay" class="font-mono">Rp 0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ACTION BUTTONS -->
+                    <div class="space-y-3 pt-2">
+                        <button onclick="generatePDF()" class="cyber-glass-hover w-full py-3.5 bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-500 hover:opacity-95 text-slate-950 font-orbitron font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-file-pdf text-base"></i>
+                            <span>Download PDF Estimasi</span>
+                        </button>
+
+                        <button onclick="sendToWhatsApp()" class="cyber-glass-hover w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs rounded-xl border border-emerald-400/30 flex items-center justify-center gap-2 transition">
+                            <i class="fa-brands fa-whatsapp text-base"></i>
+                            <span>Kirim Estimasi Ke WhatsApp</span>
+                        </button>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="saveProjectToHistory()" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-cyan-300 text-xs rounded-xl border border-slate-700 flex items-center justify-center gap-1.5 transition">
+                                <i class="fa-solid fa-bookmark"></i>
+                                <span>Simpan Proyek</span>
+                            </button>
+                            <button onclick="showConfirmDialog('Reset Kalkulator', 'Bersihkan seluruh pilihan layanan, paket, dan brief client?', resetCalculator)" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-rose-400 text-xs rounded-xl border border-slate-700 flex items-center justify-center gap-1.5 transition">
+                                <i class="fa-solid fa-trash-can"></i>
+                                <span>Bersihkan</span>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- CUSTOM CONFIRMATION DIALOG MODAL -->
+    <div id="confirmModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="cyber-glass max-w-sm w-full rounded-2xl p-6 border border-cyan-500/40 text-center space-y-4">
+            <div class="w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/40 text-rose-400 flex items-center justify-center mx-auto text-xl">
+                <i class="fa-solid fa-circle-question"></i>
+            </div>
+            <h3 id="confirmTitle" class="font-orbitron text-sm font-bold text-cyan-300">Konfirmasi</h3>
+            <p id="confirmMessage" class="text-xs text-slate-300">Apakah Anda yakin?</p>
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeConfirmModal()" class="w-1/2 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-xl border border-slate-700 transition">
+                    Batal
+                </button>
+                <button id="confirmExecuteBtn" class="w-1/2 py-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl transition">
+                    Ya, Lanjutkan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+    <!-- BENEFIT DETAILS MODAL -->
+    <div id="benefitModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="cyber-glass max-w-md w-full rounded-2xl p-6 border border-cyan-500/40 space-y-4 relative">
+            <button onclick="closeBenefitModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-cyan-950 border border-cyan-500/40 text-cyan-400 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-info-circle"></i>
+                </div>
+                <div>
+                    <h3 id="benefitModalTitle" class="font-orbitron text-sm font-bold text-cyan-300">Detail Layanan</h3>
+                    <span id="benefitModalPrice" class="text-xs text-emerald-400 font-mono">Rp 0</span>
+                </div>
+            </div>
+            <p id="benefitModalDesc" class="text-xs text-slate-300 border-t border-b border-slate-800 py-2.5"></p>
+            <div class="space-y-2">
+                <h4 class="text-xs font-bold text-purple-400 uppercase tracking-wider">Cakupan Benefit & Output:</h4>
+                <ul id="benefitModalList" class="text-xs text-slate-300 space-y-1.5 list-disc list-inside"></ul>
+            </div>
+            <button onclick="closeBenefitModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 text-xs font-bold rounded-xl transition">
+                Tutup Detail
+            </button>
+        </div>
+    </div>
+
+    <!-- EDITABLE SETTINGS MODAL -->
+    <div id="settingsModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-3 md:p-6 overflow-y-auto">
+        <div class="cyber-glass max-w-2xl w-full rounded-2xl p-6 border border-cyan-500/30 space-y-6 max-h-[90vh] overflow-y-auto relative">
+            <button onclick="closeSettingsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="border-b border-slate-800 pb-3">
+                <h2 class="font-orbitron text-lg font-bold text-cyan-400 flex items-center gap-2">
+                    <i class="fa-solid fa-gear"></i> Pengaturan Profil Studio / Designer
+                </h2>
+                <p class="text-xs text-slate-400">Atur identitas studio yang tampil pada cetakan PDF dan pesan WhatsApp.</p>
+            </div>
+
+            <div class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs text-slate-300 mb-1">Nama Studio / Designer</label>
+                        <input type="text" id="agencyNameInput" class="cyber-input w-full p-2.5 rounded-xl text-sm" placeholder="Nexus Design Studio">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-300 mb-1">Nomor Kontak / WA Studio</label>
+                        <input type="text" id="agencyPhoneInput" class="cyber-input w-full p-2.5 rounded-xl text-sm" placeholder="08123456789">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-300 mb-1">Email Studio</label>
+                        <input type="text" id="agencyEmailInput" class="cyber-input w-full p-2.5 rounded-xl text-sm" placeholder="hello@nexusdesign.id">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-300 mb-1">Info Rekening / Pembayaran</label>
+                        <input type="text" id="agencyBankInput" class="cyber-input w-full p-2.5 rounded-xl text-sm" placeholder="502501023254538/Bank Rakyat Indonesia MUH. RIEZMAN">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                <button onclick="closeSettingsModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs rounded-xl">Batal</button>
+                <button onclick="saveSettings()" class="px-5 py-2 bg-gradient-to-r from-cyan-500 to-purple-600 text-slate-950 font-bold text-xs rounded-xl">Simpan Perubahan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HISTORY MODAL -->
+    <div id="historyModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-3 md:p-6">
+        <div class="cyber-glass max-w-2xl w-full rounded-2xl p-6 border border-purple-500/30 space-y-4 max-h-[85vh] overflow-y-auto relative">
+            <button onclick="closeHistoryModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="border-b border-slate-800 pb-3">
+                <h2 class="font-orbitron text-lg font-bold text-purple-400 flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Estimasi Tersimpan
+                </h2>
+                <p class="text-xs text-slate-400">Muat ulang atau kelola proyek estimasi yang pernah dihitung sebelumnya.</p>
+            </div>
+
+            <div id="historyItemsList" class="space-y-3">
+                <!-- Injected history items -->
+            </div>
+        </div>
+    </div>
+
+    <!-- PWA INSTALL GUIDE MODAL -->
+    <div id="installModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-3 md:p-6">
+        <div class="cyber-glass max-w-md w-full rounded-2xl p-6 border border-cyan-500/30 space-y-4 text-center relative">
+            <button onclick="closeInstallModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="w-16 h-16 bg-cyan-500/10 border border-cyan-500/40 rounded-2xl mx-auto flex items-center justify-center text-cyan-400 text-2xl">
+                <img src="./icons/icon-192.png" alt="Rizz.dsg" class="w-16 h-16 rounded-2xl">
+            </div>
+
+            <h3 class="font-orbitron text-base font-bold text-cyan-400">Install Aplikasi Ke HP / PC</h3>
+
+            <div class="text-xs text-slate-300 space-y-3 text-left bg-slate-900/80 p-4 rounded-xl border border-slate-800">
+                <p class="font-semibold text-cyan-300">📱 Cara Install di HP (Android/iOS):</p>
+                <ol class="list-decimal list-inside space-y-1 text-slate-400">
+                    <li>Buka menu Browser (Titik 3 / Bagikan di Safari).</li>
+                    <li>Pilih <b>"Tambahkan ke Layar Utama" / "Add to Home Screen"</b>.</li>
+                    <li>Buka lewat alamat HTTPS aplikasi, bukan file HTML di penyimpanan HP.</li>
+                </ol>
+            </div>
+
+            <p class="text-xs text-slate-300">💻 PC: buka di Chrome atau Edge, lalu pilih ikon Install di bilah alamat atau menu browser → Install aplikasi.</p>
+            <p class="text-xs text-slate-400">Buka pertama kali dengan internet. Tampilan, font, dan PDF memakai layanan online; akses offline bergantung pada aset yang berhasil tersimpan.</p>
+            <button onclick="triggerPWAInstall()" id="browserPromptBtn" class="w-full py-3 bg-gradient-to-r from-cyan-500 to-purple-600 text-slate-950 font-bold text-xs rounded-xl hidden">
+                Install Langsung Sekarang
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const SERVICE_CATEGORIES = [
+            {
+                id: 'social_media',
+                title: 'A. Social Media',
+                icon: 'fa-hashtag',
+                color: 'text-cyan-400',
+                items: [
+                    {
+                        id: 'sm_post',
+                        name: 'Social Media Post',
+                        price: 50000,
+                        unitText: 'desain',
+                        desc: 'Desain konten single post untuk Instagram, Facebook, TikTok, dan platform sosial media lainnya.',
+                        benefits: ['1 desain Feed atau Story', 'Custom sesuai brand', 'Maksimal 2x revisi minor', 'File final JPG/PNG', 'High Resolution']
+                    },
+                    {
+                        id: 'ig_carousel',
+                        name: 'Instagram Carousel',
+                        price: 120000,
+                        unitText: 'carousel (3 slide)',
+                        desc: 'Desain Instagram carousel interaktif hingga 3 slide bawaan.',
+                        benefits: ['Maksimal 3 slide', 'Layout konsisten', 'Custom branding', '2x revisi minor', 'JPG/PNG High Resolution']
+                    },
+                    {
+                        id: 'yt_thumbnail',
+                        name: 'Thumbnail YouTube',
+                        price: 75000,
+                        unitText: 'desain',
+                        desc: 'Thumbnail atraktif untuk meningkatkan Click-Through Rate (CTR) video YouTube.',
+                        benefits: ['Custom thumbnail', 'Ukuran YouTube 1280×720', '2x revisi minor', 'JPG/PNG High Resolution']
+                    }
+                ]
+            },
+            {
+                id: 'marketing_print',
+                title: 'B. Marketing & Print',
+                icon: 'fa-print',
+                color: 'text-purple-400',
+                items: [
+                    {
+                        id: 'poster_digital',
+                        name: 'Poster Digital',
+                        price: 75000,
+                        unitText: 'desain',
+                        desc: 'Poster digital serbaguna untuk event, promosi, dan pengumuman.',
+                        benefits: ['Custom layout', 'Cocok untuk event/promosi', '2x revisi minor', 'JPG/PNG High Resolution']
+                    },
+                    {
+                        id: 'creative_poster',
+                        name: 'Creative Poster',
+                        price: 150000,
+                        unitText: 'desain',
+                        desc: 'Poster bertema artistik dengan pemrosesan efek visual tingkat lanjut.',
+                        benefits: ['Konsep visual lebih kompleks', 'Photo manipulation/compositing', 'Custom typography', '2x revisi minor', 'High Resolution']
+                    },
+                    {
+                        id: 'banner_spanduk',
+                        name: 'Banner / Spanduk',
+                        price: 100000,
+                        unitText: 'desain',
+                        desc: 'Banner cetak atau spanduk promosi luar/dalam ruangan.',
+                        benefits: ['Custom ukuran', 'Layout siap cetak', '2x revisi minor', 'File JPG/PDF High Resolution']
+                    },
+                    {
+                        id: 'flyer_1sisi',
+                        name: 'Flyer / Brosur 1 Sisi',
+                        price: 75000,
+                        unitText: 'desain',
+                        desc: 'Flyer 1 halaman untuk promosi singkat dan padat.',
+                        benefits: ['1 halaman', 'Custom layout', 'Print ready', '2x revisi minor', 'JPG/PDF']
+                    },
+                    {
+                        id: 'flyer_2sisi',
+                        name: 'Brosur 2 Sisi',
+                        price: 120000,
+                        unitText: 'desain',
+                        desc: 'Brosur bolak-balik (depan & belakang) untuk info produk lebih rinci.',
+                        benefits: ['Desain depan dan belakang', 'Custom layout', 'Print ready', '2x revisi minor', 'JPG/PDF']
+                    },
+                    {
+                        id: 'menu_pricelist',
+                        name: 'Menu / Price List',
+                        price: 100000,
+                        unitText: 'halaman',
+                        desc: 'Desain daftar menu makanan/minuman atau katalog daftar harga.',
+                        benefits: ['Custom layout', 'Penataan informasi', 'Print & digital ready', '2x revisi minor']
+                    },
+                    {
+                        id: 'business_card',
+                        name: 'Business Card',
+                        price: 75000,
+                        unitText: 'desain',
+                        desc: 'Kartu nama profesional siap cetak.',
+                        benefits: ['Desain depan & belakang', 'Print ready', '2x revisi minor', 'JPG/PDF']
+                    },
+                    {
+                        id: 'certificate',
+                        name: 'Sertifikat',
+                        price: 50000,
+                        unitText: 'template',
+                        desc: 'Template sertifikat piagam penghargaan atau webinar.',
+                        benefits: ['Custom template', 'Print ready', '2x revisi minor', 'JPG/PDF']
+                    },
+                    {
+                        id: 'id_card',
+                        name: 'ID Card / Name Tag',
+                        price: 50000,
+                        unitText: 'template',
+                        desc: 'Desain tanda pengenal atau ID Card panitia/karyawan.',
+                        benefits: ['Custom design', 'Print ready', '2x revisi minor', 'JPG/PDF']
+                    }
+                ]
+            },
+            {
+                id: 'branding',
+                title: 'C. Branding',
+                icon: 'fa-compass-drafting',
+                color: 'text-emerald-400',
+                items: [
+                    {
+                        id: 'logo_design',
+                        name: 'Logo Design',
+                        price: 150000,
+                        unitText: 'desain',
+                        desc: 'Identitas logo utama untuk memperkuat citra bisnis/brand.',
+                        benefits: ['Custom logo', '1 konsep logo final', '2x revisi minor', 'PNG transparan', 'JPG High Resolution', 'Versi warna dan monochrome']
+                    },
+                    {
+                        id: 'mini_branding',
+                        name: 'Mini Branding',
+                        price: 300000,
+                        unitText: 'paket',
+                        desc: 'Paket identitas dasar untuk brand yang baru merintis.',
+                        benefits: ['Logo', 'Brand color palette', 'Typography recommendation', 'Logo color variations', 'File final high resolution']
+                    },
+                    {
+                        id: 'starter_brand',
+                        name: 'Starter Brand',
+                        price: 500000,
+                        unitText: 'paket',
+                        desc: 'Kelengkapan branding lengkap termasuk kartu nama & sosial media.',
+                        benefits: ['Logo', 'Color palette', 'Typography', 'Business Card', '3 Social Media Post', 'File final High Resolution']
+                    },
+                    {
+                        id: 'complete_brand',
+                        name: 'Complete Brand',
+                        price: 900000,
+                        unitText: 'paket',
+                        desc: 'Solusi branding menyeluruh dengan mini brand guideline dan mockup.',
+                        benefits: ['Logo', 'Color palette', 'Typography', 'Mini Brand Guideline', 'Business Card', '6 Social Media Post', '2 Brand Mockup', 'File final High Resolution']
+                    }
+                ]
+            },
+            {
+                id: 'merch_content',
+                title: 'D. Merchandise & Content',
+                icon: 'fa-shirt',
+                color: 'text-pink-400',
+                items: [
+                    {
+                        id: 'tshirt_merch',
+                        name: 'T-Shirt / Merchandise Design',
+                        price: 100000,
+                        unitText: 'artwork',
+                        desc: 'Artwork desain kaos, totebag, mug, atau kaos komersial.',
+                        benefits: ['1 artwork', 'Custom concept', '2x revisi minor', 'PNG transparan', 'High Resolution']
+                    },
+                    {
+                        id: 'book_cover',
+                        name: 'Cover Book / E-Book',
+                        price: 100000,
+                        unitText: 'desain',
+                        desc: 'Desain sampul depan e-book atau buku fisik.',
+                        benefits: ['Cover depan', 'Custom layout', '2x revisi minor', 'JPG/PDF High Resolution']
+                    },
+                    {
+                        id: 'infographic',
+                        name: 'Infographic',
+                        price: 100000,
+                        unitText: 'desain',
+                        desc: 'Visualisasi data dan informasi menjadi grafik menarik.',
+                        benefits: ['Custom infographic', 'Visualisasi informasi', 'Custom icon/graphic', '2x revisi minor', 'High Resolution']
+                    }
+                ]
+            }
+        ];
+
+        const SOCIAL_MEDIA_PACKAGES = [
+            {
+                id: 'sm_starter',
+                name: 'Paket Starter',
+                itemCountText: '3 Social Media Post',
+                price: 150000,
+                normalPrice: 150000,
+                saving: 0,
+                benefits: ['3 desain', 'Custom branding', '2x revisi minor per desain', 'JPG/PNG High Resolution']
+            },
+            {
+                id: 'sm_basic',
+                name: 'Paket Basic',
+                itemCountText: '6 Social Media Post',
+                price: 285000,
+                normalPrice: 300000,
+                saving: 15000,
+                benefits: ['6 desain', 'Visual konsisten', 'Custom branding', '2x revisi minor per desain', 'JPG/PNG High Resolution']
+            },
+            {
+                id: 'sm_business',
+                name: 'Paket Business',
+                itemCountText: '9 Social Media Post',
+                price: 405000,
+                normalPrice: 450000,
+                saving: 45000,
+                benefits: ['9 desain', 'Visual konsisten', 'Custom branding', '2x revisi minor', 'JPG/PNG High Resolution']
+            },
+            {
+                id: 'sm_pro',
+                name: 'Paket Pro',
+                itemCountText: '12 Social Media Post',
+                price: 510000,
+                normalPrice: 600000,
+                saving: 90000,
+                badge: 'BEST VALUE',
+                benefits: ['12 desain', 'Visual branding konsisten', 'Priority queue', '2x revisi minor', 'JPG/PNG High Resolution']
+            }
+        ];
+
+        const POSTER_PACKAGES = [
+            {
+                id: 'post_single',
+                name: 'Single Poster',
+                itemCountText: '1 Poster',
+                price: 75000,
+                normalPrice: 75000,
+                saving: 0,
+                benefits: ['1 Poster Digital', 'Custom layout', '2x revisi minor', 'High Resolution']
+            },
+            {
+                id: 'post_triple',
+                name: 'Triple Poster',
+                itemCountText: '3 Poster',
+                price: 210000,
+                normalPrice: 225000,
+                saving: 15000,
+                benefits: ['3 Poster Digital', 'Tema konsisten', '2x revisi minor', 'High Resolution']
+            },
+            {
+                id: 'post_campaign',
+                name: 'Campaign',
+                itemCountText: '5 Poster',
+                price: 325000,
+                normalPrice: 375000,
+                saving: 50000,
+                benefits: ['5 Poster Seri Campaign', 'Visual terintegrasi', '2x revisi minor', 'High Resolution']
+            },
+            {
+                id: 'post_monthly',
+                name: 'Monthly',
+                itemCountText: '10 Poster',
+                price: 600000,
+                normalPrice: 750000,
+                saving: 150000,
+                badge: 'BEST VALUE',
+                benefits: ['10 Poster Bulanan', 'Konsistensi branding', 'Priority queue', 'High Resolution']
+            }
+        ];
+
+        const ADDONS_DATA = [
+            { id: 'add_revision', name: 'Additional Revision', price: 20000, type: 'qty', unitLabel: 'revisi' },
+            { id: 'add_resize', name: 'Additional Resize', price: 15000, type: 'qty', unitLabel: 'ukuran' },
+            { id: 'add_source_file', name: 'Source File PSD/AI', price: 50000, type: 'toggle' },
+            { id: 'add_carousel_slide', name: 'Additional Carousel Slide', price: 30000, type: 'qty', unitLabel: 'slide' },
+            { id: 'add_photo_manipulation', name: 'Complex Photo Manipulation', price: 50000, type: 'qty', unitLabel: 'item' }
+        ];
+
+        const CURRENCY_CONFIG = {
+            IDR: { symbol: 'Rp', rate: 1, locale: 'id-ID', digits: 0 },
+            USD: { symbol: '$', rate: 0.000065, locale: 'en-US', digits: 2 },
+            MYR: { symbol: 'RM', rate: 0.00028, locale: 'ms-MY', digits: 2 }
+        };
+
+        const DEFAULT_AGENCY = {
+            name: 'NEXUS DESIGN STUDIO',
+            phone: '0812-3456-7890',
+            email: 'contact@nexusdesign.id',
+            bank: '502501023254538/Bank Rakyat Indonesia MUH. RIEZMAN'
+        };
+
+        let appState = {
+            currency: 'IDR',
+            selectedServices: {},
+            selectedPackages: {},
+            selectedAddons: {},
+            expressActive: false,
+            customServices: [],
+            client: { name: '', phone: '', brief: '' },
+            discount: 0,
+            tax: 0,
+            agency: { ...DEFAULT_AGENCY },
+            history: [],
+            accordionStates: {
+                social_media: true,
+                marketing_print: false,
+                branding: false,
+                merch_content: false
+            },
+            paymentStatus: 'BELUM_BAYAR',
+            dpPercent: 50
+        };
+
+        let pendingConfirmCallback = null;
+        let deferredPWAInstallPrompt = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadStateFromLocalStorage();
+            syncCurrencyUI();
+            renderCategories();
+            renderPackages();
+            renderAddons();
+            renderSummary();
+            initPWA();
+
+            window.addEventListener('beforeunload', () => {
+                saveStateToLocalStorage();
+            });
+        });
+
+        function changeCurrency(newCurrency) {
+            if (CURRENCY_CONFIG[newCurrency]) {
+                appState.currency = newCurrency;
+                syncCurrencyUI();
+                renderCategories();
+                renderPackages();
+                renderAddons();
+                renderSummary();
+                saveStateToLocalStorage();
+            }
+        }
+
+        function syncCurrencyUI() {
+            const selector = document.getElementById('currencySelector');
+            if (selector) selector.value = appState.currency || 'IDR';
+        }
+
+        function formatCurrency(amountIDR) {
+            const currKey = appState.currency || 'IDR';
+            const config = CURRENCY_CONFIG[currKey];
+            const convertedAmount = amountIDR * config.rate;
+
+            if (currKey === 'IDR') {
+                return 'Rp ' + Math.round(convertedAmount).toLocaleString('id-ID');
+            } else if (currKey === 'USD') {
+                return '$ ' + convertedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            } else if (currKey === 'MYR') {
+                return 'RM ' + convertedAmount.toLocaleString('ms-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+            return `${config.symbol} ${convertedAmount.toFixed(config.digits)}`;
+        }
+
+        function saveStateToLocalStorage() {
+            try {
+                appState.client.name = document.getElementById('clientName')?.value || '';
+                appState.client.phone = document.getElementById('clientPhone')?.value || '';
+                appState.client.brief = document.getElementById('clientBrief')?.value || '';
+                appState.discount = readPercentage('discountPercent', appState.discount);
+                appState.tax = readPercentage('taxPercent', appState.tax);
+
+                localStorage.setItem('nexus_design_calculator_v2', JSON.stringify(appState));
+
+                const badgeText = document.getElementById('saveStatusText');
+                if (badgeText) {
+                    const now = new Date();
+                    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    badgeText.innerText = `Tersimpan (${timeStr})`;
+                }
+            } catch (e) {
+                console.error("Local storage error:", e);
+            }
+        }
+
+        function loadStateFromLocalStorage() {
+            const saved = localStorage.getItem('nexus_design_calculator_v2');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    appState = { ...appState, ...parsed };
+
+                    if (!appState.accordionStates) {
+                        appState.accordionStates = { social_media: true, marketing_print: false, branding: false, merch_content: false };
+                    }
+                    if (!appState.paymentStatus) appState.paymentStatus = 'BELUM_BAYAR';
+                    if (!appState.dpPercent) appState.dpPercent = 50;
+
+                    if (document.getElementById('clientName')) document.getElementById('clientName').value = appState.client.name || '';
+                    if (document.getElementById('clientPhone')) document.getElementById('clientPhone').value = appState.client.phone || '';
+                    if (document.getElementById('clientBrief')) document.getElementById('clientBrief').value = appState.client.brief || '';
+                    if (document.getElementById('discountPercent')) document.getElementById('discountPercent').value = appState.discount || 0;
+                    if (document.getElementById('taxPercent')) document.getElementById('taxPercent').value = appState.tax || 0;
+                    if (document.getElementById('expressToggle')) document.getElementById('expressToggle').checked = !!appState.expressActive;
+                    if (document.getElementById('paymentStatusSelect')) document.getElementById('paymentStatusSelect').value = appState.paymentStatus;
+                    if (document.getElementById('dpPercentInput')) document.getElementById('dpPercentInput').value = appState.dpPercent;
+                } catch (e) {
+                    console.error("Error loading state:", e);
+                }
+            }
+        }
+
+        function readPercentage(id, fallback = 0) {
+            const input = document.getElementById(id);
+            const value = Number(input ? input.value : fallback);
+            return Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : 0;
+        }
+
+        function handlePercentageInput(input, normalize = false) {
+            const value = readPercentage(input.id);
+            appState[input.id === 'discountPercent' ? 'discount' : 'tax'] = value;
+            if (normalize) input.value = value;
+            renderSummary();
+            saveStateToLocalStorage();
+        }
+
+        function handleInputSave() {
+            saveStateToLocalStorage();
+            renderSummary();
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `toast-animate pointer-events-auto px-4 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 shadow-xl ${
+                type === 'success' ? 'bg-slate-900 border-emerald-500/80 text-emerald-300' : 'bg-slate-900 border-cyan-500/80 text-cyan-300'
+            }`;
+            toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check text-emerald-400' : 'fa-info-circle text-cyan-400'}"></i> <span>${message}</span>`;
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        function showConfirmDialog(title, message, callback) {
+            document.getElementById('confirmTitle').innerText = title;
+            document.getElementById('confirmMessage').innerText = message;
+            pendingConfirmCallback = callback;
+            document.getElementById('confirmModal').classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.add('hidden');
+            pendingConfirmCallback = null;
+        }
+
+        document.getElementById('confirmExecuteBtn')?.addEventListener('click', () => {
+            if (typeof pendingConfirmCallback === 'function') {
+                pendingConfirmCallback();
+            }
+            closeConfirmModal();
+        });
+
+        function renderCategories() {
+            const container = document.getElementById('categoriesContainer');
+            if (!container) return;
+
+            let html = '';
+
+            SERVICE_CATEGORIES.forEach((cat) => {
+                const isExpanded = !!appState.accordionStates[cat.id];
+                html += `
+                    <div class="border border-slate-800 rounded-xl overflow-hidden bg-slate-900/40">
+                        <button onclick="toggleAccordion('${cat.id}')" class="w-full p-3.5 bg-slate-900/80 hover:bg-slate-800/80 flex items-center justify-between text-left transition">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid ${cat.icon} ${cat.color} text-sm"></i>
+                                <span class="font-orbitron text-xs font-bold text-slate-200 tracking-wide">${cat.title}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] text-slate-400 font-mono" id="catCount_${cat.id}">0 terpilih</span>
+                                <i class="fa-solid fa-chevron-down text-xs text-slate-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}" id="accIcon_${cat.id}"></i>
+                            </div>
+                        </button>
+
+                        <div id="accContent_${cat.id}" class="accordion-content space-y-2 p-3 bg-slate-950/40 border-t border-slate-800/80 ${isExpanded ? 'expanded' : ''}">
+                `;
+
+                cat.items.forEach((srv) => {
+                    const sel = appState.selectedServices[srv.id] || { active: false, qty: 1 };
+                    html += `
+                        <div class="p-3 rounded-xl border ${sel.active ? 'border-cyan-500/80 bg-cyan-950/20' : 'border-slate-800 bg-slate-900/60'} transition flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div class="flex items-start gap-3 flex-1 cursor-pointer select-none" onclick="toggleServiceActive('${srv.id}')">
+                                <input type="checkbox" ${sel.active ? 'checked' : ''} class="mt-1 w-4 h-4 rounded text-cyan-500 focus:ring-cyan-400 bg-slate-900 border-slate-700 cursor-pointer">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="text-xs font-bold text-slate-200">${srv.name}</h4>
+                                        <button onclick="event.stopPropagation(); openBenefitModal('${srv.id}')" class="text-slate-400 hover:text-cyan-400 text-xs px-1" title="Lihat detail & benefit">
+                                            <i class="fa-solid fa-circle-info"></i>
+                                        </button>
+                                    </div>
+                                    <p class="text-[11px] text-slate-400">${formatCurrency(srv.price)} / ${srv.unitText}</p>
+                                </div>
+                            </div>
+
+                            ${sel.active ? `
+                                <div class="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800">
+                                    <span class="text-xs font-mono text-cyan-300 font-bold">${formatCurrency(srv.price * sel.qty)}</span>
+                                    <div class="flex items-center gap-2 bg-slate-950 px-2 py-1 rounded-lg border border-slate-800">
+                                        <button onclick="changeServiceQty('${srv.id}', -1)" class="w-5 h-5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded">-</button>
+                                        <span class="text-xs font-bold text-cyan-300 w-5 text-center font-mono">${sel.qty}</span>
+                                        <button onclick="changeServiceQty('${srv.id}', 1)" class="w-5 h-5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded">+</button>
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+
+            // CUSTOM SERVICES FIELD INJECT
+            appState.customServices.forEach((cs, cIdx) => {
+                html += `
+                    <div class="p-3.5 rounded-xl border border-purple-500/50 bg-purple-950/20 flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <div class="w-full sm:w-auto flex-1 space-y-1">
+                            <input type="text" value="${cs.name}" onchange="updateCustomService(${cIdx}, 'name', this.value)" placeholder="Nama Layanan Kustom..." class="cyber-input w-full px-2.5 py-1 text-xs rounded-lg">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] text-slate-400">Harga (${CURRENCY_CONFIG[appState.currency || 'IDR'].symbol}):</span>
+                                <input type="number" value="${cs.price}" onchange="updateCustomService(${cIdx}, 'price', this.value)" class="cyber-input w-28 px-2 py-0.5 text-xs rounded-lg">
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-1 bg-slate-950 px-2 py-1 rounded-lg border border-slate-800">
+                                <button onclick="changeCustomQty(${cIdx}, -1)" class="w-5 h-5 bg-slate-800 text-slate-200 text-xs rounded">-</button>
+                                <span class="text-xs font-bold text-purple-300 w-5 text-center font-mono">${cs.qty}</span>
+                                <button onclick="changeCustomQty(${cIdx}, 1)" class="w-5 h-5 bg-slate-800 text-slate-200 text-xs rounded">+</button>
+                            </div>
+                            <button onclick="removeCustomService(${cIdx})" class="text-rose-400 hover:text-rose-300 px-1 text-xs">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            updateCategoryBadgeCounts();
+        }
+
+        function toggleAccordion(catId) {
+            appState.accordionStates[catId] = !appState.accordionStates[catId];
+            const acc = document.getElementById(`accContent_${catId}`);
+            const icon = document.getElementById(`accIcon_${catId}`);
+            if (acc) {
+                acc.classList.toggle('expanded', appState.accordionStates[catId]);
+            }
+            if (icon) {
+                icon.classList.toggle('rotate-180', appState.accordionStates[catId]);
+            }
+            saveStateToLocalStorage();
+        }
+
+        function toggleServiceActive(srvId) {
+            if (!appState.selectedServices[srvId]) {
+                appState.selectedServices[srvId] = { active: true, qty: 1 };
+            } else {
+                appState.selectedServices[srvId].active = !appState.selectedServices[srvId].active;
+            }
+            renderCategories();
+            handleInputSave();
+        }
+
+        function changeServiceQty(srvId, delta) {
+            if (appState.selectedServices[srvId]) {
+                let newQty = (appState.selectedServices[srvId].qty || 1) + delta;
+                if (newQty < 1) newQty = 1;
+                appState.selectedServices[srvId].qty = newQty;
+                renderCategories();
+                handleInputSave();
+            }
+        }
+
+        function addCustomServiceField() {
+            appState.customServices.push({
+                name: 'Layanan Tambahan Kustom',
+                price: 50000,
+                qty: 1
+            });
+            renderCategories();
+            handleInputSave();
+        }
+
+        function updateCustomService(index, field, val) {
+            if (appState.customServices[index]) {
+                if (field === 'price') {
+                    appState.customServices[index].price = parseFloat(val) || 0;
+                } else {
+                    appState.customServices[index][field] = val;
+                }
+                renderCategories();
+                handleInputSave();
+            }
+        }
+
+        function changeCustomQty(index, delta) {
+            if (appState.customServices[index]) {
+                let newQty = appState.customServices[index].qty + delta;
+                if (newQty < 1) newQty = 1;
+                appState.customServices[index].qty = newQty;
+                renderCategories();
+                handleInputSave();
+            }
+        }
+
+        function removeCustomService(index) {
+            appState.customServices.splice(index, 1);
+            renderCategories();
+            handleInputSave();
+        }
+
+        function updateCategoryBadgeCounts() {
+            SERVICE_CATEGORIES.forEach(cat => {
+                let count = 0;
+                cat.items.forEach(srv => {
+                    if (appState.selectedServices[srv.id]?.active) {
+                        count++;
+                    }
+                });
+                const badge = document.getElementById(`catCount_${cat.id}`);
+                if (badge) {
+                    badge.innerText = `${count} terpilih`;
+                }
+            });
+        }
+
+        function getPackagePricing(pkg) {
+            const normalPrice = Math.max(0, Number(pkg.normalPrice ?? pkg.price) || 0);
+            const saving = Math.min(normalPrice, Math.max(0, Number(pkg.saving) || 0));
+            return { normalPrice, saving, finalPrice: normalPrice - saving };
+        }
+
+        function renderPackages() {
+            const smGrid = document.getElementById('socialMediaPackagesGrid');
+            const postGrid = document.getElementById('posterPackagesGrid');
+
+            if (smGrid) {
+                let smHtml = '';
+                SOCIAL_MEDIA_PACKAGES.forEach(pkg => {
+                    const isSelected = !!appState.selectedPackages[pkg.id];
+                    const pricing = getPackagePricing(pkg);
+                    smHtml += `
+                        <div onclick="togglePackage('${pkg.id}')" class="p-3.5 rounded-xl border cursor-pointer select-none transition relative ${isSelected ? 'border-cyan-400 bg-cyan-950/30' : 'border-slate-800 bg-slate-900/60 hover:border-slate-700'}">
+                            ${pkg.badge ? `<span class="absolute -top-2.5 right-3 px-2 py-0.5 rounded-full text-[9px] font-bold bg-gradient-to-r from-cyan-500 to-purple-500 text-slate-950 uppercase">${pkg.badge}</span>` : ''}
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-xs font-bold text-slate-200">${pkg.name}</h4>
+                                <input type="checkbox" ${isSelected ? 'checked' : ''} class="w-4 h-4 rounded text-cyan-500 focus:ring-cyan-400 bg-slate-900 border-slate-700">
+                            </div>
+                            <p class="text-[11px] text-cyan-300 font-semibold mt-1">${pkg.itemCountText}</p>
+                            <div class="flex flex-wrap items-baseline gap-2 mt-1">
+                                ${pricing.saving > 0 ? `<span class="text-[10px] text-slate-400 font-mono line-through">${formatCurrency(pricing.normalPrice)}</span>` : ''}
+                                <span class="text-xs font-bold text-slate-100 font-mono">${formatCurrency(pricing.finalPrice)}</span>
+                                ${pricing.saving > 0 ? `<span class="text-[10px] text-emerald-400 font-mono">Hemat ${formatCurrency(pricing.saving)} · sudah dipotong</span>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                smGrid.innerHTML = smHtml;
+            }
+
+            if (postGrid) {
+                let postHtml = '';
+                POSTER_PACKAGES.forEach(pkg => {
+                    const isSelected = !!appState.selectedPackages[pkg.id];
+                    const pricing = getPackagePricing(pkg);
+                    postHtml += `
+                        <div onclick="togglePackage('${pkg.id}')" class="p-3.5 rounded-xl border cursor-pointer select-none transition relative ${isSelected ? 'border-purple-400 bg-purple-950/30' : 'border-slate-800 bg-slate-900/60 hover:border-slate-700'}">
+                            ${pkg.badge ? `<span class="absolute -top-2.5 right-3 px-2 py-0.5 rounded-full text-[9px] font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-slate-950 uppercase">${pkg.badge}</span>` : ''}
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-xs font-bold text-slate-200">${pkg.name}</h4>
+                                <input type="checkbox" ${isSelected ? 'checked' : ''} class="w-4 h-4 rounded text-purple-500 focus:ring-purple-400 bg-slate-900 border-slate-700">
+                            </div>
+                            <p class="text-[11px] text-purple-300 font-semibold mt-1">${pkg.itemCountText}</p>
+                            <div class="flex flex-wrap items-baseline gap-2 mt-1">
+                                ${pricing.saving > 0 ? `<span class="text-[10px] text-slate-400 font-mono line-through">${formatCurrency(pricing.normalPrice)}</span>` : ''}
+                                <span class="text-xs font-bold text-slate-100 font-mono">${formatCurrency(pricing.finalPrice)}</span>
+                                ${pricing.saving > 0 ? `<span class="text-[10px] text-emerald-400 font-mono">Hemat ${formatCurrency(pricing.saving)} · sudah dipotong</span>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                postGrid.innerHTML = postHtml;
+            }
+        }
+
+        function togglePackage(pkgId) {
+            appState.selectedPackages[pkgId] = !appState.selectedPackages[pkgId];
+            renderPackages();
+            handleInputSave();
+        }
+
+        function renderAddons() {
+            const container = document.getElementById('addonsGrid');
+            if (!container) return;
+
+            let html = '';
+            ADDONS_DATA.forEach(add => {
+                const sel = appState.selectedAddons[add.id] || { active: false, qty: 1 };
+                html += `
+                    <div class="p-3 rounded-xl border ${sel.active ? 'border-pink-500/80 bg-pink-950/20' : 'border-slate-800 bg-slate-900/60'} transition flex flex-col justify-between gap-2">
+                        <div class="flex items-center justify-between cursor-pointer select-none" onclick="toggleAddon('${add.id}')">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" ${sel.active ? 'checked' : ''} class="w-4 h-4 rounded text-pink-500 focus:ring-pink-400 bg-slate-900 border-slate-700">
+                                <span class="text-xs font-bold text-slate-200">${add.name}</span>
+                            </div>
+                            <span class="text-[11px] text-pink-300 font-mono font-bold">${formatCurrency(add.price)}</span>
+                        </div>
+                        ${sel.active && add.type === 'qty' ? `
+                            <div class="flex items-center justify-end gap-2 pt-1 border-t border-slate-800/80">
+                                <span class="text-[10px] text-slate-400">Jumlah:</span>
+                                <div class="flex items-center gap-1.5 bg-slate-950 px-2 py-0.5 rounded-lg border border-slate-800">
+                                    <button onclick="changeAddonQty('${add.id}', -1)" class="w-5 h-5 bg-slate-800 text-slate-200 text-xs rounded">-</button>
+                                    <span class="text-xs font-bold text-pink-300 w-5 text-center font-mono">${sel.qty}</span>
+                                    <button onclick="changeAddonQty('${add.id}', 1)" class="w-5 h-5 bg-slate-800 text-slate-200 text-xs rounded">+</button>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function toggleAddon(addonId) {
+            if (!appState.selectedAddons[addonId]) {
+                appState.selectedAddons[addonId] = { active: true, qty: 1 };
+            } else {
+                appState.selectedAddons[addonId].active = !appState.selectedAddons[addonId].active;
+            }
+            renderAddons();
+            handleInputSave();
+        }
+
+        function changeAddonQty(addonId, delta) {
+            if (appState.selectedAddons[addonId]) {
+                let newQty = (appState.selectedAddons[addonId].qty || 1) + delta;
+                if (newQty < 1) newQty = 1;
+                appState.selectedAddons[addonId].qty = newQty;
+                renderAddons();
+                handleInputSave();
+            }
+        }
+
+        function toggleExpress(checked) {
+            appState.expressActive = checked;
+            handleInputSave();
+        }
+
+        function updatePaymentStatus(val) {
+            appState.paymentStatus = val;
+            const dpContainer = document.getElementById('dpInputContainer');
+            if (dpContainer) {
+                if (val === 'DP') {
+                    dpContainer.classList.remove('hidden');
+                } else {
+                    dpContainer.classList.add('hidden');
+                }
+            }
+            handleInputSave();
+        }
+
+        function handleDpInputChange() {
+            let val = parseFloat(document.getElementById('dpPercentInput')?.value) || 50;
+            if (val < 1) val = 1;
+            if (val > 99) val = 99;
+            appState.dpPercent = val;
+            handleInputSave();
+        }
+
+        function getDynamicTermsList() {
+            const activeCats = new Set();
+
+            SERVICE_CATEGORIES.forEach(cat => {
+                cat.items.forEach(srv => {
+                    if (appState.selectedServices[srv.id]?.active) {
+                        activeCats.add(cat.id);
+                    }
+                });
+            });
+
+            if (appState.selectedPackages['sm_starter'] || appState.selectedPackages['sm_basic'] || appState.selectedPackages['sm_business'] || appState.selectedPackages['sm_pro']) {
+                activeCats.add('social_media');
+            }
+            if (appState.selectedPackages['post_single'] || appState.selectedPackages['post_triple'] || appState.selectedPackages['post_campaign'] || appState.selectedPackages['post_monthly']) {
+                activeCats.add('marketing_print');
+            }
+
+            let terms = [
+                'Maksimal 2x revisi minor per desain (perubahan teks, warna, atau tata letak kecil) tanpa mengubah konsep dasar.',
+                'Source file PSD/AI tidak termasuk kecuali dibeli sebagai add-on atau bagian paket.',
+                'Waktu pengerjaan standar menyesuaikan dengan tingkat antrean proyek dan kompleksitas brief.'
+            ];
+
+            if (activeCats.has('social_media')) {
+                terms.push('Social Media: Output dikirimkan dalam format digital RGB High-Resolution (JPG/PNG), siap diunggah ke platform sosial media.');
+            }
+            if (activeCats.has('marketing_print')) {
+                terms.push('Marketing & Print (Poster/Banner/Brosur): File diserahkan dalam format digital siap cetak (High-Res PDF/CMYK JPG). Klien melakukan proses cetak mandiri ke pihak percetakan.');
+            }
+            if (activeCats.has('branding')) {
+                terms.push('Branding & Identity: Termasuk file master vektor/transparan (AI/EPS/PNG). Hak guna branding sepenuhnya menjadi milik pemesan.');
+            }
+            if (activeCats.has('merch_content')) {
+                terms.push('Merchandise & Content: Diberikan file artwork digital resolusi tinggi dengan latar transparan/siap sablon.');
+            }
+            if (appState.expressActive) {
+                terms.push('Express Delivery: Layanan kilat (<24 jam) diprioritaskan langsung dengan biaya tambahan +40% dari subtotal.');
+            }
+
+            return terms;
+        }
+
+        function renderDynamicTerms() {
+            const listContainer = document.getElementById('dynamicTermsList');
+            if (!listContainer) return;
+
+            const terms = getDynamicTermsList();
+            listContainer.innerHTML = terms.map(t => `<li>${t}</li>`).join('');
+        }
+
+        function calculateTotals() {
+            let subtotal = 0;
+            const itemizedList = [];
+
+            // 1. Standard Services
+            SERVICE_CATEGORIES.forEach(cat => {
+                cat.items.forEach(srv => {
+                    const sel = appState.selectedServices[srv.id];
+                    if (sel && sel.active) {
+                        const lineTotal = srv.price * sel.qty;
+                        subtotal += lineTotal;
+                        itemizedList.push({
+                            type: 'service',
+                            name: srv.name,
+                            qty: sel.qty,
+                            unitPrice: srv.price,
+                            total: lineTotal,
+                            unitText: srv.unitText
+                        });
+                    }
+                });
+            });
+
+            // 2. Custom Services
+            appState.customServices.forEach(cs => {
+                const lineTotal = cs.price * cs.qty;
+                subtotal += lineTotal;
+                itemizedList.push({
+                    type: 'custom',
+                    name: cs.name,
+                    qty: cs.qty,
+                    unitPrice: cs.price,
+                    total: lineTotal,
+                    unitText: 'unit'
+                });
+            });
+
+            // 3. Packages
+            SOCIAL_MEDIA_PACKAGES.concat(POSTER_PACKAGES).forEach(pkg => {
+                if (appState.selectedPackages[pkg.id]) {
+                    const pricing = getPackagePricing(pkg);
+                    subtotal += pricing.finalPrice;
+                    itemizedList.push({
+                        type: 'package',
+                        name: pkg.name,
+                        qty: 1,
+                        unitPrice: pricing.finalPrice,
+                        total: pricing.finalPrice,
+                        normalPrice: pricing.normalPrice,
+                        saving: pricing.saving,
+                        unitText: pkg.itemCountText
+                    });
+                }
+            });
+
+            // 4. Addons
+            ADDONS_DATA.forEach(add => {
+                const sel = appState.selectedAddons[add.id];
+                if (sel && sel.active) {
+                    const lineTotal = add.price * sel.qty;
+                    subtotal += lineTotal;
+                    itemizedList.push({
+                        type: 'addon',
+                        name: add.name,
+                        qty: sel.qty,
+                        unitPrice: add.price,
+                        total: lineTotal,
+                        unitText: add.unitLabel || 'unit'
+                    });
+                }
+            });
+
+            // 5. Dynamic Express Fee (+40% of Subtotal)
+            const expressFee = appState.expressActive ? Math.round(subtotal * 0.40) : 0;
+            const totalBeforeDiscountTax = subtotal + expressFee;
+
+            // 6. Discount
+            const discountPercent = readPercentage('discountPercent', appState.discount);
+            const discountAmount = Math.round((totalBeforeDiscountTax * discountPercent) / 100);
+            const afterDiscount = totalBeforeDiscountTax - discountAmount;
+
+            // 7. Tax / Agency Fee
+            const taxPercent = readPercentage('taxPercent', appState.tax);
+            const taxAmount = Math.round((afterDiscount * taxPercent) / 100);
+
+            const grandTotal = Math.max(0, afterDiscount + taxAmount);
+
+            // Payment Calculations
+            const dpPercent = appState.dpPercent || 50;
+            let paidAmount = 0;
+            let remainingAmount = grandTotal;
+
+            if (appState.paymentStatus === 'LUNAS') {
+                paidAmount = grandTotal;
+                remainingAmount = 0;
+            } else if (appState.paymentStatus === 'DP') {
+                paidAmount = Math.round((grandTotal * dpPercent) / 100);
+                remainingAmount = grandTotal - paidAmount;
+            }
+
+            return {
+                itemizedList,
+                subtotal,
+                expressFee,
+                discountPercent,
+                discountAmount,
+                taxPercent,
+                taxAmount,
+                grandTotal,
+                paymentStatus: appState.paymentStatus,
+                dpPercent,
+                paidAmount,
+                remainingAmount
+            };
+        }
+
+        function renderSummary() {
+            const data = calculateTotals();
+
+            document.getElementById('grandTotalDisplay').innerText = formatCurrency(data.grandTotal);
+            document.getElementById('subtotalDisplay').innerText = formatCurrency(data.subtotal);
+
+            const expressRow = document.getElementById('expressRow');
+            if (data.expressFee > 0) {
+                expressRow.classList.remove('hidden');
+                document.getElementById('expressFeeDisplay').innerText = formatCurrency(data.expressFee);
+            } else {
+                expressRow.classList.add('hidden');
+            }
+
+            const discountRow = document.getElementById('discountRow');
+            if (data.discountAmount > 0) {
+                discountRow.classList.remove('hidden');
+                document.getElementById('discountDisplay').innerText = `- ${formatCurrency(data.discountAmount)} (${data.discountPercent}%)`;
+            } else {
+                discountRow.classList.add('hidden');
+            }
+
+            const taxRow = document.getElementById('taxRow');
+            if (data.taxAmount > 0) {
+                taxRow.classList.remove('hidden');
+                document.getElementById('taxDisplay').innerText = `+ ${formatCurrency(data.taxAmount)} (${data.taxPercent}%)`;
+            } else {
+                taxRow.classList.add('hidden');
+            }
+
+            const dpContainer = document.getElementById('dpInputContainer');
+            if (data.paymentStatus === 'DP') {
+                if (dpContainer) dpContainer.classList.remove('hidden');
+                const dpDisp = document.getElementById('dpAmountDisplay');
+                const remDisp = document.getElementById('remainingAmountDisplay');
+                if (dpDisp) dpDisp.innerText = formatCurrency(data.paidAmount);
+                if (remDisp) remDisp.innerText = formatCurrency(data.remainingAmount);
+            } else {
+                if (dpContainer) dpContainer.classList.add('hidden');
+            }
+
+            const breakdownDiv = document.getElementById('summaryBreakdown');
+            if (data.itemizedList.length === 0) {
+                breakdownDiv.innerHTML = `<div class="text-slate-500 italic py-2 text-center">Belum ada layanan atau paket terpilih</div>`;
+            } else {
+                let html = '';
+                data.itemizedList.forEach(it => {
+                    html += `
+                        <div class="flex justify-between items-center py-1.5">
+                            <div>
+                                <span class="text-slate-200 font-semibold">${it.name}</span>
+                                <span class="text-[10px] text-slate-400 block">
+                                    ${it.type === 'package' && it.saving > 0
+                                        ? `${formatCurrency(it.normalPrice)} − Hemat ${formatCurrency(it.saving)} = ${formatCurrency(it.total)}`
+                                        : (it.qty > 1 ? `${it.qty} × ${formatCurrency(it.unitPrice)}` : formatCurrency(it.unitPrice))}
+                                </span>
+                            </div>
+                            <span class="font-mono text-cyan-300 font-bold">${formatCurrency(it.total)}</span>
+                        </div>
+                    `;
+                });
+                breakdownDiv.innerHTML = html;
+            }
+
+            renderDynamicTerms();
+        }
+
+        function openBenefitModal(srvId) {
+            let item = null;
+            SERVICE_CATEGORIES.forEach(cat => {
+                const found = cat.items.find(i => i.id === srvId);
+                if (found) item = found;
+            });
+
+            if (!item) return;
+
+            document.getElementById('benefitModalTitle').innerText = item.name;
+            document.getElementById('benefitModalPrice').innerText = formatCurrency(item.price) + ' / ' + item.unitText;
+            document.getElementById('benefitModalDesc').innerText = item.desc || 'Layanan desain profesional.';
+
+            const listEl = document.getElementById('benefitModalList');
+            if (listEl) {
+                listEl.innerHTML = (item.benefits || []).map(b => `<li>${b}</li>`).join('');
+            }
+
+            document.getElementById('benefitModal').classList.remove('hidden');
+        }
+
+        function closeBenefitModal() {
+            document.getElementById('benefitModal').classList.add('hidden');
+        }
+
+        function resetClientForm() {
+            document.getElementById('clientName').value = '';
+            document.getElementById('clientPhone').value = '';
+            document.getElementById('clientBrief').value = '';
+            handleInputSave();
+            showToast('Data client telah dibersihkan');
+        }
+
+        function resetCalculator() {
+            appState.selectedServices = {};
+            appState.selectedPackages = {};
+            appState.selectedAddons = {};
+            appState.expressActive = false;
+            appState.customServices = [];
+            appState.paymentStatus = 'BELUM_BAYAR';
+            appState.dpPercent = 50;
+            document.getElementById('discountPercent').value = 0;
+            document.getElementById('taxPercent').value = 0;
+            if (document.getElementById('expressToggle')) document.getElementById('expressToggle').checked = false;
+            if (document.getElementById('paymentStatusSelect')) document.getElementById('paymentStatusSelect').value = 'BELUM_BAYAR';
+            if (document.getElementById('dpPercentInput')) document.getElementById('dpPercentInput').value = 50;
+
+            resetClientForm();
+            renderCategories();
+            renderPackages();
+            renderAddons();
+            renderSummary();
+            showToast('Kalkulator berhasil dibersihkan');
+        }
+
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+
+            const calc = calculateTotals();
+            const clientName = document.getElementById('clientName')?.value || 'Client Yth.';
+            const clientPhone = document.getElementById('clientPhone')?.value || '-';
+            const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+            // Background
+            doc.setFillColor(7, 10, 18);
+            doc.rect(0, 0, 210, 297, 'F');
+
+            // Top Cyan Line
+            doc.setFillColor(0, 240, 255);
+            doc.rect(0, 0, 210, 4, 'F');
+
+            // Studio Header
+            doc.setTextColor(0, 240, 255);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(18);
+            doc.text(appState.agency.name.toUpperCase(), 14, 20);
+
+            doc.setTextColor(148, 163, 184);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.text(`Kontak: ${appState.agency.phone} | Email: ${appState.agency.email}`, 14, 26);
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text("ESTIMASI BIAYA PROYEK DESAIN", 200, 20, { align: 'right' });
+
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(148, 163, 184);
+            doc.text(`Mata Uang: ${appState.currency || 'IDR'}`, 200, 26, { align: 'right' });
+            doc.text(`Tanggal: ${dateStr}`, 200, 31, { align: 'right' });
+
+            doc.setDrawColor(30, 41, 59);
+            doc.line(14, 38, 200, 38);
+
+            // Client Info Section Only (Brief Omitted as Requested)
+            doc.setFillColor(14, 21, 38);
+            doc.roundedRect(14, 42, 186, 20, 3, 3, 'F');
+
+            doc.setFontSize(9.5);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(0, 240, 255);
+            doc.text("INFORMASI CLIENT:", 18, 49);
+
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(241, 245, 249);
+            doc.text(`Nama Client : ${clientName}`, 18, 56);
+            doc.text(`No. Phone/WA : ${clientPhone}`, 110, 56);
+
+            // Itemized Table Header
+            let startY = 68;
+            doc.setFillColor(30, 41, 59);
+            doc.rect(14, startY, 186, 8, 'F');
+            doc.setFontSize(8.5);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(241, 245, 249);
+            doc.text("RINCIAN LAYANAN & PAKET DESAIN", 18, startY + 5.5);
+            doc.text("QTY", 130, startY + 5.5, { align: 'center' });
+            doc.text("HARGA", 160, startY + 5.5, { align: 'right' });
+            doc.text("SUBTOTAL", 195, startY + 5.5, { align: 'right' });
+
+            startY += 10;
+            doc.setFont('helvetica', 'normal');
+
+            if (calc.itemizedList.length === 0) {
+                doc.setTextColor(148, 163, 184);
+                doc.text("Belum ada layanan atau paket terpilih.", 18, startY + 4);
+                startY += 8;
+            } else {
+                calc.itemizedList.forEach(it => {
+                    doc.setTextColor(241, 245, 249);
+                    doc.text(it.name, 18, startY + 4);
+                    doc.text(it.qty.toString(), 130, startY + 4, { align: 'center' });
+                    doc.text(formatCurrency(it.unitPrice), 160, startY + 4, { align: 'right' });
+                    doc.text(formatCurrency(it.total), 195, startY + 4, { align: 'right' });
+
+                    doc.setDrawColor(30, 41, 59);
+                    doc.line(14, startY + 7, 200, startY + 7);
+                    startY += 9;
+                });
+            }
+
+            startY += 4;
+
+            // Calculations Box
+            const rightX = 120;
+            doc.setFontSize(8.5);
+            doc.setTextColor(148, 163, 184);
+            doc.text("Subtotal Layanan:", rightX, startY + 5);
+            doc.setTextColor(241, 245, 249);
+            doc.text(formatCurrency(calc.subtotal), 195, startY + 5, { align: 'right' });
+
+            let currY = startY + 12;
+
+            if (calc.expressFee > 0) {
+                doc.setTextColor(148, 163, 184);
+                doc.text("Express Delivery (+40%):", rightX, currY);
+                doc.setTextColor(251, 191, 36);
+                doc.text(formatCurrency(calc.expressFee), 195, currY, { align: 'right' });
+                currY += 7;
+            }
+
+            if (calc.discountAmount > 0) {
+                doc.setTextColor(148, 163, 184);
+                doc.text(`Diskon (${calc.discountPercent}%):`, rightX, currY);
+                doc.setTextColor(52, 211, 153);
+                doc.text(`-${formatCurrency(calc.discountAmount)}`, 195, currY, { align: 'right' });
+                currY += 7;
+            }
+
+            if (calc.taxAmount > 0) {
+                doc.setTextColor(148, 163, 184);
+                doc.text(`Pajak / Fee (${calc.taxPercent}%):`, rightX, currY);
+                doc.setTextColor(241, 245, 249);
+                doc.text(`+${formatCurrency(calc.taxAmount)}`, 195, currY, { align: 'right' });
+                currY += 7;
+            }
+
+            doc.setFillColor(0, 240, 255);
+            doc.roundedRect(rightX, currY + 2, 80, 11, 2, 2, 'F');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9.5);
+            doc.setTextColor(7, 10, 18);
+            doc.text("TOTAL ESTIMASI:", rightX + 4, currY + 9);
+            doc.text(formatCurrency(calc.grandTotal), 195, currY + 9, { align: 'right' });
+
+            currY += 16;
+
+            // Payment Status Box
+            doc.setFillColor(30, 41, 59);
+            doc.roundedRect(rightX, currY, 80, 16, 2, 2, 'F');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8.5);
+
+            if (calc.paymentStatus === 'LUNAS') {
+                doc.setTextColor(52, 211, 153);
+                doc.text("STATUS: LUNAS / SELESAI", rightX + 4, currY + 6);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(241, 245, 249);
+                doc.text(`Dibayar: ${formatCurrency(calc.grandTotal)}`, rightX + 4, currY + 12);
+            } else if (calc.paymentStatus === 'DP') {
+                doc.setTextColor(251, 191, 36);
+                doc.text(`STATUS: DP (${calc.dpPercent}%)`, rightX + 4, currY + 6);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(241, 245, 249);
+                doc.text(`Telah Dibayar: ${formatCurrency(calc.paidAmount)}`, rightX + 4, currY + 11);
+                doc.setTextColor(248, 113, 113);
+                doc.text(`Sisa Pelunasan: ${formatCurrency(calc.remainingAmount)}`, rightX + 4, currY + 15);
+            } else {
+                doc.setTextColor(148, 163, 184);
+                doc.text("STATUS: BELUM BAYAR (DRAFT)", rightX + 4, currY + 6);
+                doc.setFont('helvetica', 'normal');
+                doc.text("Menunggu konfirmasi pembayaran", rightX + 4, currY + 12);
+            }
+
+            // DYNAMIC TERMS SECTION ON PDF (MATCHING CHECKED ITEMS)
+            const footerY = Math.max(currY + 22, 195);
+            doc.setDrawColor(30, 41, 59);
+            doc.line(14, footerY, 200, footerY);
+
+            let termY = footerY + 6;
+
+            doc.setFontSize(8.5);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(248, 113, 113);
+            doc.text("PENTING: TIDAK TERMASUK CETAK FISIK", 14, termY);
+            termY += 5;
+
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(148, 163, 184);
+            doc.setFontSize(8);
+            doc.text("• Seluruh biaya di atas HANYA untuk JASA DESAIN & FILE DIGITAL SIAP CETAK.", 14, termY);
+            termY += 7;
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8.5);
+            doc.setTextColor(0, 240, 255);
+            doc.text("KETENTUAN LAYANAN & PEMBAYARAN:", 14, termY);
+            termY += 5;
+
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(148, 163, 184);
+            doc.setFontSize(8);
+            doc.text(`• Rekening Pembayaran: ${appState.agency.bank}`, 14, termY);
+            termY += 5;
+            doc.text("• DP minimal 50% untuk memulai pengerjaan desain.", 14, termY);
+            termY += 5;
+
+            // Inject Dynamic Terms based on Checked Items
+            const dynamicTerms = getDynamicTermsList();
+            dynamicTerms.forEach(t => {
+                const splitT = doc.splitTextToSize(`• ${t}`, 182);
+                doc.text(splitT, 14, termY);
+                termY += (splitT.length * 4) + 1;
+            });
+
+            // Footer Stamp
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(7.5);
+            doc.setTextColor(51, 65, 85);
+            doc.text("GENERATED VIA RIZZ.DSG DESIGN PRICER PWA", 105, 288, { align: 'center' });
+
+            const cleanName = clientName.replace(/[^a-zA-Z0-9]/g, '_');
+            doc.save(`Estimasi_Desain_${cleanName}.pdf`);
+            showToast('PDF estimasi berhasil terunduh!');
+        }
+
+        function sendToWhatsApp() {
+            const calc = calculateTotals();
+            const clientName = document.getElementById('clientName')?.value || 'Client';
+            const clientPhone = document.getElementById('clientPhone')?.value || '';
+            const brief = document.getElementById('clientBrief')?.value || '-';
+
+            let msg = `*HALO ${clientName.toUpperCase()}, INI RANCANGAN ESTIMASI BIAYA PROYEK DESAIN*\n\n`;
+            msg += `*Studio:* ${appState.agency.name}\n`;
+            msg += `*Mata Uang:* ${appState.currency || 'IDR'}\n`;
+            msg += `*Brief:* ${brief}\n\n`;
+            msg += `*Rincian Layanan & Paket:*\n`;
+
+            calc.itemizedList.forEach(it => {
+                msg += `• ${it.name} (${it.qty}x) = ${formatCurrency(it.total)}\n`;
+            });
+
+            if (calc.expressFee > 0) {
+                msg += `• Express Delivery (+40%) = ${formatCurrency(calc.expressFee)}\n`;
+            }
+
+            msg += `\n*GRAND TOTAL ESTIMASI: ${formatCurrency(calc.grandTotal)}*\n`;
+
+            if (calc.paymentStatus === 'LUNAS') {
+                msg += `*STATUS PEMBAYARAN:* 🟢 LUNAS / SELESAI (${formatCurrency(calc.grandTotal)})\n`;
+            } else if (calc.paymentStatus === 'DP') {
+                msg += `*STATUS PEMBAYARAN:* 🟠 DP (${calc.dpPercent}%)\n`;
+                msg += `• Nominal DP Dibayar: ${formatCurrency(calc.paidAmount)}\n`;
+                msg += `• Sisa Pelunasan: ${formatCurrency(calc.remainingAmount)}\n`;
+            } else {
+                msg += `*STATUS PEMBAYARAN:* 🟡 BELUM BAYAR (Draft Estimasi)\n`;
+            }
+
+            msg += `\n⚠️ *Catatan:* Harga hanya mencakup *File Digital Siap Cetak (Print-Ready)*, *TIDAK TERMASUK cetak fisik*.\n\n`;
+            msg += `_Silakan dibalas pesan ini jika menyetujui estimasi di atas. Terima kasih!_`;
+
+            let targetPhone = clientPhone.replace(/[^0-9]/g, '');
+            if (targetPhone.startsWith('0')) {
+                targetPhone = '62' + targetPhone.substring(1);
+            }
+
+            const encoded = encodeURIComponent(msg);
+            const waUrl = targetPhone ? `https://wa.me/${targetPhone}?text=${encoded}` : `https://wa.me/?text=${encoded}`;
+            window.open(waUrl, '_blank');
+        }
+
+        function openHistoryModal() {
+            const listContainer = document.getElementById('historyItemsList');
+            if (appState.history.length === 0) {
+                listContainer.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">Belum ada riwayat estimasi tersimpan.</p>`;
+            } else {
+                let html = '';
+                appState.history.forEach((h, idx) => {
+                    html += `
+                        <div class="bg-slate-900/80 border border-slate-800 p-3.5 rounded-xl flex items-center justify-between gap-3">
+                            <div>
+                                <h4 class="text-xs font-bold text-cyan-300">${h.clientName}</h4>
+                                <span class="text-[10px] text-slate-400">${h.date} • Total: <strong class="text-emerald-400">${formatCurrency(h.grandTotal)}</strong></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="loadHistoryRecord(${idx})" class="px-3 py-1 bg-purple-950/60 hover:bg-purple-900 border border-purple-500/40 text-purple-300 text-xs rounded-lg transition">
+                                    Muat Data
+                                </button>
+                                <button onclick="deleteHistoryRecord(${idx})" class="text-rose-400 hover:text-rose-300 px-2 text-xs">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                listContainer.innerHTML = html;
+            }
+
+            document.getElementById('historyModal').classList.remove('hidden');
+        }
+
+        function saveProjectToHistory() {
+            const calc = calculateTotals();
+            const clientName = document.getElementById('clientName')?.value || 'Proyek Tanpa Nama';
+
+            const projectRecord = {
+                id: 'proj_' + Date.now(),
+                date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+                clientName,
+                grandTotal: calc.grandTotal,
+                snapshot: JSON.parse(JSON.stringify(appState))
+            };
+
+            appState.history.unshift(projectRecord);
+            if (appState.history.length > 20) appState.history.pop();
+
+            saveStateToLocalStorage();
+            showToast(`Proyek "${clientName}" tersimpan ke riwayat!`);
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('historyModal').classList.add('hidden');
+        }
+
+        function loadHistoryRecord(idx) {
+            const record = appState.history[idx];
+            if (record && record.snapshot) {
+                appState.selectedServices = record.snapshot.selectedServices || {};
+                appState.selectedPackages = record.snapshot.selectedPackages || {};
+                appState.selectedAddons = record.snapshot.selectedAddons || {};
+                appState.expressActive = record.snapshot.expressActive || false;
+                appState.customServices = record.snapshot.customServices || [];
+                appState.currency = record.snapshot.currency || 'IDR';
+                appState.client = record.snapshot.client || { name: '', phone: '', brief: '' };
+                appState.discount = record.snapshot.discount || 0;
+                appState.tax = record.snapshot.tax || 0;
+
+                document.getElementById('clientName').value = appState.client.name;
+                document.getElementById('clientPhone').value = appState.client.phone;
+                document.getElementById('clientBrief').value = appState.client.brief;
+                document.getElementById('discountPercent').value = appState.discount;
+                document.getElementById('taxPercent').value = appState.tax;
+                if (document.getElementById('expressToggle')) document.getElementById('expressToggle').checked = appState.expressActive;
+
+                syncCurrencyUI();
+                renderCategories();
+                renderPackages();
+                renderAddons();
+                renderSummary();
+                closeHistoryModal();
+                showToast(`Data proyek "${record.clientName}" berhasil dimuat!`);
+            }
+        }
+
+        function deleteHistoryRecord(idx) {
+            appState.history.splice(idx, 1);
+            saveStateToLocalStorage();
+            openHistoryModal();
+        }
+
+        function openSettingsModal() {
+            document.getElementById('agencyNameInput').value = appState.agency.name || '';
+            document.getElementById('agencyPhoneInput').value = appState.agency.phone || '';
+            document.getElementById('agencyEmailInput').value = appState.agency.email || '';
+            document.getElementById('agencyBankInput').value = appState.agency.bank || '';
+            document.getElementById('settingsModal').classList.remove('hidden');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        function saveSettings() {
+            appState.agency.name = document.getElementById('agencyNameInput')?.value || appState.agency.name;
+            appState.agency.phone = document.getElementById('agencyPhoneInput')?.value || appState.agency.phone;
+            appState.agency.email = document.getElementById('agencyEmailInput')?.value || appState.agency.email;
+            appState.agency.bank = document.getElementById('agencyBankInput')?.value || appState.agency.bank;
+
+            saveStateToLocalStorage();
+            closeSettingsModal();
+            showToast('Profil studio berhasil diperbarui');
+        }
+
+        function initPWA() {
+            if ('serviceWorker' in navigator && window.isSecureContext) {
+                navigator.serviceWorker.register('./sw.js', { scope: './' })
+                    .catch(error => console.warn('Penyimpanan offline belum tersedia:', error));
+            }
+            window.addEventListener('beforeinstallprompt', event => {
+                event.preventDefault();
+                deferredPWAInstallPrompt = event;
+                document.getElementById('browserPromptBtn')?.classList.remove('hidden');
+            });
+            window.addEventListener('appinstalled', () => {
+                deferredPWAInstallPrompt = null;
+                document.getElementById('browserPromptBtn')?.classList.add('hidden');
+                closeInstallModal();
+                showToast('Rizz.dsg berhasil dipasang!');
+            });
+        }
+
+        function openInstallModal() {
+            document.getElementById('installModal').classList.remove('hidden');
+        }
+
+        function closeInstallModal() {
+            document.getElementById('installModal').classList.add('hidden');
+        }
+
+        async function triggerPWAInstall() {
+            const prompt = deferredPWAInstallPrompt;
+            if (!prompt) { openInstallModal(); return; }
+            deferredPWAInstallPrompt = null;
+            document.getElementById('browserPromptBtn')?.classList.add('hidden');
+            try {
+                await prompt.prompt();
+                const result = await prompt.userChoice;
+                if (result.outcome === 'accepted') closeInstallModal();
+            } catch (error) {
+                showToast('Gunakan menu browser untuk memasang aplikasi.', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
